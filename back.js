@@ -1,0 +1,9 @@
+const pageTrail=[];
+let lastView={page,condo:activeCondo,data:db},goingBack=false;
+const routeBeforeBack=go;
+function updateBackButton(){const b=document.querySelector('#pageBack');b.disabled=pageTrail.length===0;b.title=b.disabled?'Você está na primeira página':'Voltar à página anterior';b.setAttribute('aria-label',b.title)}
+go=function(target){if(!goingBack&&(target!==lastView.page||activeCondo!==lastView.condo)){pageTrail.push({...lastView,scroll:window.scrollY});if(pageTrail.length>50)pageTrail.shift()}routeBeforeBack(target);lastView={page,condo:activeCondo,data:db};updateBackButton()};
+function previousPage(){const dialogs=Array.from(document.querySelectorAll('dialog[open]'));if(dialogs.length){dialogs[dialogs.length-1].close();return}const previous=pageTrail.pop();if(!previous)return;goingBack=true;try{activeCondo=previous.condo;db=previous.data;localStorage.setItem('pb-active-condo',activeCondo);go(previous.page);window.scrollTo({top:previous.scroll||0,behavior:'instant'})}finally{goingBack=false;updateBackButton()}}
+function addDialogBackButtons(){document.querySelectorAll('dialog[open]').forEach(d=>{if(d.querySelector('.dialog-back'))return;let b=document.createElement('button');b.className='dialog-back no-print';b.type='button';b.textContent='←';b.title='Voltar';b.setAttribute('aria-label','Voltar à janela anterior');b.onclick=()=>d.close();d.prepend(b)})}
+const pageBack=document.createElement('button');pageBack.id='pageBack';pageBack.className='no-print';pageBack.type='button';pageBack.innerHTML='<span aria-hidden="true">←</span> Voltar';pageBack.onclick=previousPage;document.querySelector('.company-header').append(pageBack);updateBackButton();
+new MutationObserver(addDialogBackButtons).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['open']});
